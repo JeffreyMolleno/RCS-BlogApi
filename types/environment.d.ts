@@ -8,7 +8,8 @@ declare global {
         DATABASE_PASSWORD: string | undefined;
         DATABASE_COLLECTION: string;
         SERVER_PORT: number;
-        NODE_ENVIRONMENT: "development" | "staging" | "production" | "test"
+        NODE_ENVIRONMENT: "development" | "staging" | "production" | "test";
+        TOKEN_SECRET: string;
     }
   }
 }
