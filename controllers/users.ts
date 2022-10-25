@@ -1,67 +1,112 @@
-import { createDiffieHellmanGroup } from "crypto";
-import { Request, Response } from "express";
-import knex from '../config/knex';
-const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
+import { Request, Response } from 'express'
+import knex from '../config/knex'
+const bcrypt = require('bcrypt')
+const jwt = require('jsonwebtoken')
 
-interface Users{
-  first_name: string;
-  middle_name: string;
-  last_name: string;
-  email: string;
-  password: string;
+interface Users {
+    first_name: string
+    middle_name: string
+    last_name: string
+    email: string
+    password: string
 }
 
 module.exports = {
-  postUser: async (req: Request, res: Response) => {
-    try {
-      const { first_name, middle_name, last_name, email, password }: Users = req.body;
-      
-      if(!Boolean(first_name && middle_name && last_name && email && password)){
-        throw ('Data is missing. Process terminated');
-      }
-      // check if email already exist
-      const check_email = await knex("users").select("*").where("email", email)
+    postUser: async (req: Request, res: Response) => {
+        try {
+            const {
+                first_name,
+                middle_name,
+                last_name,
+                email,
+                password,
+            }: Users = req.body
 
-      if(check_email.length){
-        throw ('Email already used. You can login instead');
-      }
+            if (
+                !Boolean(
+                    first_name && middle_name && last_name && email && password
+                )
+            ) {
+                throw 'Data is missing. Process terminated'
+            }
+            // check if email already exist
+            const check_email = await knex('users')
+                .select('*')
+                .where('email', email)
 
-      // encrypting the password
-      const encryptedPass = await bcrypt.hash(password, 10)
+            if (check_email.length) {
+                throw 'Email already used. You can login instead'
+            }
 
-      const data = await knex("users").insert({ first_name, middle_name, last_name, email, password:encryptedPass });
-      
-      if(data){
-        res.status(201).json({process:"Insert to user table",status:"Successful!"});
-      }
-    
-    } catch (error) {
-      res.status(201).json({process:"Insert to user table", status: "Failed", error});
-    }
-  },
+            // encrypting the password
+            const encryptedPass = await bcrypt.hash(password, 10)
 
-  loginUser:  async (req: Request, res: Response) => {
-    try {
-      const { email, password } = req.body;
+            const data = await knex('users').insert({
+                first_name,
+                middle_name,
+                last_name,
+                email,
+                password: encryptedPass,
+            })
 
-      const checkData:Users[] = await knex("users").select("*").where("email", email).limit(1);
+            if (data) {
+                res.status(201).json({
+                    process: 'Insert to user table',
+                    status: 'Successful!',
+                })
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Insert to user table',
+                status: 'Failed',
+                error,
+            })
+        }
+    },
+    loginUser: async (req: Request, res: Response) => {
+        try {
+            const { email, password } = req.body
 
-      if(!checkData.length){
-        throw ('Account verification failed');
-      }
-    
-      const match = await bcrypt.compare(password,checkData[0].password )
+            const checkData: Users[] = await knex('users')
+                .select('*')
+                .where('email', email)
+                .limit(1)
 
-      if(match){
-        const accessToken = jwt.sign(JSON.stringify(checkData), process.env.TOKEN_SECRET);
-        res.status(201).json({process:"Checking credentials",status:"Successful!", accessToken });
-      }else{
-        throw ('Account verification failed');
-      }
-    } catch (error) {
-      res.status(201).json({process:"Checking credentials", status: "Failed", error});
+            if (!checkData.length) {
+                throw 'Account verification failed'
+            }
 
-    }
-  }
-};
+            const match = await bcrypt.compare(password, checkData[0].password)
+
+            if (match) {
+                const accessToken = jwt.sign(
+                    JSON.stringify(checkData),
+                    process.env.TOKEN_SECRET
+                )
+                res.status(201).json({
+                    process: 'Checking credentials',
+                    status: 'Successful!',
+                    accessToken,
+                })
+            } else {
+                throw 'Account verification failed'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Checking credentials',
+                status: 'Failed',
+                error,
+            })
+        }
+    },
+    // updateUser: async (req: Request, res: Response) => {
+    //   try {
+    //     const { first_name, middle_name, last_name, email, password }: Users = req.body;
+
+    //     res.status(201).json({process:"Updating User Details",status:"Successful!" });
+
+    //   } catch (error) {
+    //     res.status(201).json({process:"Updating User Details", status: "Failed", error});
+    //   }
+    // }
+}
