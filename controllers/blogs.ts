@@ -34,7 +34,6 @@ module.exports = {
             }
 
             // add data to table
-
             const blogData = await knex('blogs').insert({
                 user_id,
                 blog_cover_img,
@@ -139,5 +138,33 @@ module.exports = {
             })
         }
     },
-    // deleteBlog: async (req: Request, res: Response) => {}
+    deleteBlog: async (req: Request, res: Response) => {
+        const { blog_id, user_id } = req.body
+
+        try {
+            if (!Boolean(blog_id && user_id)) {
+                throw 'Data is missing. Process terminated'
+            }
+
+            const deleteData = await knex('blogs')
+                .where({ blog_id: req.body.blog_id })
+                .del()
+
+            if (deleteData) {
+                res.status(201).json({
+                    process: 'Deleting data',
+                    status: 'Successful!',
+                    data: deleteData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Deleting data',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
 }

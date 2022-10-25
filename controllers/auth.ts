@@ -14,7 +14,7 @@ module.exports = {
                 process.env.TOKEN_SECRET
             )
 
-            if (decryptedData[0].user_id !== parseInt(req.body.user_id)) {
+            if (decryptedData[0].user_id.toString() !== req.body.user_id) {
                 throw 'Failed credential verifications. Process terminated'
             }
 

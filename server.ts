@@ -23,7 +23,8 @@ app.get('/api/loginUser', users.loginUser)
 app.post('/api/blog/add', auth.verify, blogs.postBlog)
 app.get('/api/blog/:blog_id', auth.verify, blogs.getBlog)
 app.get('/api/blog', auth.verify, blogs.getALlBlogs)
-app.patch('/api/blog/update', blogs.updateBlog)
+app.patch('/api/blog/update', auth.verify, blogs.updateBlog)
+app.delete('/api/blog/delete', auth.verify, blogs.deleteBlog)
 // app.get("/api/blog/:search_key", blogs.searchBlog);
 // app.get("/api/blog/:filter_key", blogs.filterBlog);
 
