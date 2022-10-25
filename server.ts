@@ -21,8 +21,9 @@ app.get('/api/loginUser', users.loginUser)
 // app.post("/api/updateUser", users.updateUser);
 
 app.post('/api/blog/add', auth.verify, blogs.postBlog)
-app.get('/api/blog/:id', auth.verify, blogs.getBlog)
-// app.get("/api/blog/:id", blogs.getALlBlog);
+app.get('/api/blog/:blog_id', auth.verify, blogs.getBlog)
+app.get('/api/blog', auth.verify, blogs.getALlBlogs)
+app.patch('/api/blog/update', blogs.updateBlog)
 // app.get("/api/blog/:search_key", blogs.searchBlog);
 // app.get("/api/blog/:filter_key", blogs.filterBlog);
 

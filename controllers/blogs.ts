@@ -2,6 +2,7 @@ import { Request, Response } from 'express'
 import knex from '../config/knex'
 
 interface Blogs {
+    blog_id?: string
     user_id: string
     blog_cover_img: string
     blog_header: string
@@ -60,10 +61,26 @@ module.exports = {
     },
     getBlog: async (req: Request, res: Response) => {
         try {
-            res.status(201).json({
-                process: 'Retrieving data',
-                status: 'Successful!',
-            })
+            const { blog_id } = req.params
+
+            if (!Boolean(blog_id)) {
+                throw 'Data is missing. Process terminated'
+            }
+
+            const blogData = await knex('blogs')
+                .select('*')
+                .where('blog_id', blog_id)
+                .limit(1)
+
+            if (blogData) {
+                res.status(201).json({
+                    process: 'Retrieving data',
+                    status: 'Successful!',
+                    data: blogData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
         } catch (error) {
             res.status(401).json({
                 process: 'Retrieving data',
@@ -72,8 +89,55 @@ module.exports = {
             })
         }
     },
+    getALlBlogs: async (req: Request, res: Response) => {
+        try {
+            const blogData = await knex('blogs').select('*')
 
-    // getAllBlogs: async (req: Request, res: Response) => {}
-    // updateBlog: async (req: Request, res: Response) => {}
+            // console.log(blogData)
+
+            if (blogData) {
+                res.status(201).json({
+                    process: 'Retrieving data',
+                    status: 'Successful!',
+                    data: blogData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Retrieving data',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
+    updateBlog: async (req: Request, res: Response) => {
+        try {
+            if (!Boolean(req.body.blog_id)) {
+                throw 'Data is missing. Process terminated'
+            }
+
+            const updateData = await knex('blogs')
+                .where({ blog_id: req.body.blog_id })
+                .update({ ...req.body })
+
+            if (updateData) {
+                res.status(201).json({
+                    process: 'Retrieving data',
+                    status: 'Successful!',
+                    data: updateData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Retrieving data',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
     // deleteBlog: async (req: Request, res: Response) => {}
 }
