@@ -1,4 +1,4 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
 import knex from '../config/knex'
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
@@ -12,7 +12,7 @@ interface Users {
 }
 
 module.exports = {
-    postUser: async (req: Request, res: Response) => {
+    postUser: async (req: Request, res: Response, next: NextFunction) => {
         try {
             const {
                 first_name,
@@ -55,6 +55,7 @@ module.exports = {
                     status: 'Successful!',
                 })
             }
+            next()
         } catch (error) {
             res.status(401).json({
                 process: 'Insert to user table',
@@ -99,14 +100,4 @@ module.exports = {
             })
         }
     },
-    // updateUser: async (req: Request, res: Response) => {
-    //   try {
-    //     const { first_name, middle_name, last_name, email, password }: Users = req.body;
-
-    //     res.status(201).json({process:"Updating User Details",status:"Successful!" });
-
-    //   } catch (error) {
-    //     res.status(201).json({process:"Updating User Details", status: "Failed", error});
-    //   }
-    // }
 }

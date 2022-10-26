@@ -1,33 +1,31 @@
-import { Request, Response } from 'express'
+import { NextFunction, Request, Response } from 'express'
+import { nextTick } from 'process'
 import knex from '../config/knex'
 
+type BlogCoverImg = {
+    filename: string
+    path: string
+    destination: string
+}
 interface Blogs {
     blog_id?: string
     user_id: string
-    blog_cover_img: string
     blog_header: string
     blog_body: string
     blog_tags: string
 }
 
 module.exports = {
-    postBlog: async (req: Request, res: Response) => {
+    postBlog: async (req: Request, res: Response, next: NextFunction) => {
         try {
-            const {
-                user_id,
-                blog_cover_img,
-                blog_header,
-                blog_body,
-                blog_tags,
-            }: Blogs = req.body
+            const { user_id, blog_header, blog_body, blog_tags }: Blogs =
+                req.body
+
+            const image = req.file
 
             if (
                 !Boolean(
-                    user_id &&
-                        blog_cover_img &&
-                        blog_header &&
-                        blog_body &&
-                        blog_tags
+                    user_id && image && blog_header && blog_body && blog_tags
                 )
             ) {
                 throw 'Data is missing. Process terminated'
@@ -36,7 +34,11 @@ module.exports = {
             // add data to table
             const blogData = await knex('blogs').insert({
                 user_id,
-                blog_cover_img,
+                blog_cover_img: JSON.stringify({
+                    filename: image?.filename,
+                    path: image?.path,
+                    destination: image?.destination,
+                }),
                 blog_header,
                 blog_body,
                 blog_tags,
@@ -50,6 +52,8 @@ module.exports = {
             } else {
                 throw 'An error occurred. Kindly try again'
             }
+
+            next()
         } catch (error) {
             res.status(401).json({
                 process: 'Adding data to blog table',
@@ -91,8 +95,6 @@ module.exports = {
     getALlBlogs: async (req: Request, res: Response) => {
         try {
             const blogData = await knex('blogs').select('*')
-
-            // console.log(blogData)
 
             if (blogData) {
                 res.status(201).json({
@@ -162,6 +164,87 @@ module.exports = {
         } catch (error) {
             res.status(401).json({
                 process: 'Deleting data',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
+    filterBlog: async (req: Request, res: Response) => {
+        try {
+            const { filter_key } = req.params
+
+            if (!Boolean(filter_key)) {
+                throw 'Filter key missing. Process terminated'
+            }
+
+            const filterData = await knex('blogs')
+                .select('blogs.*', 'first_name', 'last_name', 'middle_name')
+                .join('users', 'users.user_id', '=', 'blogs.user_id')
+                .whereRaw(`blog_tags LIKE '%${filter_key}%'`)
+                .orWhereRaw(`blog_header LIKE '%${filter_key}%'`)
+                .orWhereRaw(`users.first_name LIKE '%${filter_key}%'`)
+
+            if (filterData) {
+                res.status(201).json({
+                    process: 'Data Search',
+                    status: 'Successful!',
+                    data:
+                        filterData.length < 1 ? 'No data matched' : filterData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Data Search',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
+    searchBlog: async (req: Request, res: Response) => {
+        try {
+            const { search_key } = req.params
+
+            if (!Boolean(search_key)) {
+                throw 'Search key missing. Process terminated'
+            }
+
+            const filterData = await knex('blogs')
+                .select('blogs.*', 'first_name', 'last_name', 'middle_name')
+                .join('users', 'users.user_id', '=', 'blogs.user_id')
+                .orWhereRaw(`blog_header LIKE '%${search_key}%'`)
+                .limit(1)
+
+            if (filterData) {
+                res.status(201).json({
+                    process: 'Data Search',
+                    status: 'Successful!',
+                    data:
+                        filterData.length < 1 ? 'No data matched' : filterData,
+                })
+            } else {
+                throw 'An error occurred. Kindly try again'
+            }
+        } catch (error) {
+            res.status(401).json({
+                process: 'Data Search',
+                status: 'Failed!',
+                error,
+            })
+        }
+    },
+    uploadImage: async (req: Request, res: Response, next: NextFunction) => {
+        try {
+            const data = JSON.parse(JSON.stringify(req.body))
+            res.status(201).json({
+                status: 'Successful!',
+            })
+
+            next()
+        } catch (error) {
+            res.status(401).json({
+                process: 'Data Search',
                 status: 'Failed!',
                 error,
             })
