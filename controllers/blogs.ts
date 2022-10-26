@@ -125,7 +125,7 @@ module.exports = {
 
             if (updateData) {
                 res.status(201).json({
-                    process: 'Retrieving data',
+                    process: 'Updating data',
                     status: 'Successful!',
                     data: updateData,
                 })
@@ -134,7 +134,7 @@ module.exports = {
             }
         } catch (error) {
             res.status(401).json({
-                process: 'Retrieving data',
+                process: 'Updating data',
                 status: 'Failed!',
                 error,
             })
@@ -214,6 +214,7 @@ module.exports = {
                 .select('blogs.*', 'first_name', 'last_name', 'middle_name')
                 .join('users', 'users.user_id', '=', 'blogs.user_id')
                 .orWhereRaw(`blog_header LIKE '%${search_key}%'`)
+                .orWhereRaw(`blog_body LIKE '%${search_key}%'`)
                 .limit(1)
 
             if (filterData) {
@@ -226,22 +227,6 @@ module.exports = {
             } else {
                 throw 'An error occurred. Kindly try again'
             }
-        } catch (error) {
-            res.status(401).json({
-                process: 'Data Search',
-                status: 'Failed!',
-                error,
-            })
-        }
-    },
-    uploadImage: async (req: Request, res: Response, next: NextFunction) => {
-        try {
-            const data = JSON.parse(JSON.stringify(req.body))
-            res.status(201).json({
-                status: 'Successful!',
-            })
-
-            next()
         } catch (error) {
             res.status(401).json({
                 process: 'Data Search',
